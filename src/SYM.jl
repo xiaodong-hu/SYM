@@ -1,4 +1,4 @@
-module Sym
+module SYM
 
 using BenchmarkTools
 
@@ -16,7 +16,7 @@ Here I confine the variable in real just for convenience of the promotion rule w
 """
 abstract type Symbolic{T} end # <: Number
 
-struct Sym{T<:Number} <: Symbolic{T} # Symbolic{T}
+struct Sym{T<:Number} <: Symbolic{T}
 	expr # of Type{Symbol} or Type{Expr}
 end
 

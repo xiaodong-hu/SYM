@@ -1,5 +1,5 @@
-# Sym
-Julia Package for Symbolic Computation.
+# SYM
+Neat Julia Package for Symbolic Computation.
 
 
 ## Variables Claim
@@ -81,3 +81,4 @@ end
     I = Sym{Int64}(:im)
     ```
     in the middle, and evaluate the complex expression at the last stage by substituting `I` to `im`.
+2. Now no simplify rules are implemented.

@@ -138,7 +138,7 @@ macro def(x...) # accept multiple arguments
 end
 
 "Claim (real) symbolic variables (with the Type{Sym{Real}}) by its Symbol representations"
-function def_from_tuple(x::Vector) # accept multiple arguments
+function def_from_vec(x::Vector) # accept multiple arguments
 	q = []
 	for s in x
 		if isa(s, Symbol)
@@ -241,6 +241,7 @@ end
 #####################################################################
 ########################## Tests Start Here #########################
 #####################################################################
+#=
 @def x y z
 v = [x y z]
 #I = Sym{Int64}(:im) # to avoid the issues of compatibility for the default Type{Complex} (recall that in Julia, `const im = Complex(false, true)`)
@@ -271,6 +272,6 @@ end
 
 	func = lambdify(test, [:x, :y])
 	Base.invokelatest(func,1,2); # to avoid world age problem, see https://discourse.julialang.org/t/how-to-bypass-the-world-age-problem/7012/25
-end
+end=#
 
 end

@@ -76,8 +76,8 @@ end
 ```
 
 ## Possible issues
-1. To avoid the issues on the compatibility with the default Type{Complex} (recall that in Julia, imaginary unit is defined as `const im = Complex(false, true)`), it is highly recommend to use symbolic `I` instead
+1. To avoid the issues on the compatibility of `Base.promote_rules()` and `Base.convert()` with the default Type{Complex} (recall that in Julia, imaginary unit is defined as `const im = Complex(false, true)`), it is highly recommended to use symbolic `I`
     ```
     I = Sym{Int64}(:im)
     ```
-    and evaluate the complex expression at the last stage by substituting `I` to `im`.
+    in the middle, and evaluate the complex expression at the last stage by substituting `I` to `im`.

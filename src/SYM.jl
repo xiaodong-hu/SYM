@@ -1,9 +1,14 @@
 module SYM
 
+using BenchmarkTools: push!
 using BenchmarkTools
 
 import Base:+,-,*,/,^,sin,cos,tan,exp # methods for ordinary numbers are needed, so we have to import explicitly (since we have changed their methods)
 import Base:convert, show
+
+export Sym, show
+export @def, def_from_vec
+export sub!, lambdify, lambdify_fast
 
 #####################################################################
 ########## Types, Promotion Rules, and Convert Start Here ###########
@@ -21,8 +26,8 @@ struct Sym{T<:Number} <: Symbolic{T}
 end
 
 "Claim realization of the instance for other types"
-Sym{T}(x::String) where {T} = Sym{T}(Meta.parse(x))
-Sym{T}(x::Sym) where {T} = Sym{T}(x.expr) # change the symtype, or keep unchanged for repeated invokation
+Sym{T}(x::String) where {T<:Number} = Sym{T}(Meta.parse(x))
+Sym{T}(x::Sym) where {T<:Number} = Sym{T}(x.expr) # change the symtype, or keep unchanged for repeated invokation
 Sym(x) = Sym{Real}(x) # add a method for default type of Real
 Sym(list::Vector) = [Sym{Real}(i) for i in list] # add a method for generating a list of symbols
 #= for example,
@@ -121,37 +126,36 @@ end
 Claim (real) symbolic variables (with the Type{Sym{Real}}) by its Symbol representations
 """
 macro def(x...) # accept multiple arguments
-	q = [] # variable list
+	q = Expr(:block)
 	for s in x
 		if s isa String
 			s = Meta.parse(s) # convert to Symbol or Expr
-			eval(Expr(:(=), s, Expr(:call, :Sym, Expr(:quote, s)))) # claim symbolic variables
-			push!(q, eval(s))
+			push!(q.args, Expr(:(=), esc(s), Expr(:call, :Sym, Expr(:quote, s)))) # Expr for claiming symbolic variables
 		elseif s isa Symbol
-			eval(Expr(:(=), s, Expr(:call, :Sym, Expr(:quote, s)))) # claim symbolic variables
-			push!(q, eval(s))
+			push!(q.args, Expr(:(=), esc(s), Expr(:call, :Sym, Expr(:quote, s)))) # Expr for claiming symbolic variables
 		else
 			error("Symbolic variables cannot be constructed: Not implemented!")
 		end
 	end
-	return q
+	push!(q.args, Expr(:vect, map(esc, x)...)) # the last argument of q is a vector of all variables.
+	return q # automatically evaluate the Exprs so that all variables are claimed globally. And the last argument be evaluated and displayed.
 end
-
+#=
 "Claim (real) symbolic variables (with the Type{Sym{Real}}) by its Symbol representations"
 function def_from_vec(x::Vector) # accept multiple arguments
 	q = []
 	for s in x
 		if isa(s, Symbol)
 			eval(Expr(:(=), s, Expr(:call, :Sym, Expr(:quote, s)))) # claim symbolic variables
-			push!(q,eval(s))
+			push!(q, s)
 		elseif isa(s, String)
 			s = Meta.parse(s)
 			eval(Expr(:(=), s, Expr(:call, :Sym, Expr(:quote, s)))) # claim symbolic variables
-			push!(q,eval(s))
+			push!(q, s)
 		end
 	end
 	return q
-end
+end=#
 
 #####################################################################
 ########### Substitution and Lambdification Start Here ##############
@@ -241,37 +245,5 @@ end
 #####################################################################
 ########################## Tests Start Here #########################
 #####################################################################
-#=
-@def x y z
-v = [x y z]
-#I = Sym{Int64}(:im) # to avoid the issues of compatibility for the default Type{Complex} (recall that in Julia, `const im = Complex(false, true)`)
-test = [sin(x)+y x^y; x+y x]
-#test = sub!(test,(x=>:a,y=>z))
-
-@btime begin # 5.302 s (3361039 allocations: 196.32 MiB)
-	# test for 100*100 matrix
-	test = Array{Sym{Real}}(undef, 100, 100)
-	for i in 1:100
-		for j in 1:100
-			test[i,j] = sin(i*x+y^j)
-		end
-	end
-
-	func = lambdify_fast(test, [x,y])
-	Base.invokelatest(func,1,2); # to avoid world age problem, see https://discourse.julialang.org/t/how-to-bypass-the-world-age-problem/7012/25
-end
-
-@btime begin # 17.204 s (15956305 allocations: 751.22 MiB)
-	# test for 100*100 matrix
-	test = Array{Sym{Real}}(undef, 100, 100)
-	for i in 1:100
-		for j in 1:100
-			test[i,j] = sin(i*x+y^j)
-		end
-	end
-
-	func = lambdify(test, [:x, :y])
-	Base.invokelatest(func,1,2); # to avoid world age problem, see https://discourse.julialang.org/t/how-to-bypass-the-world-age-problem/7012/25
-end=#
 
 end
